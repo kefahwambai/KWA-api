@@ -3,14 +3,15 @@ class SessionsController < ApplicationController
     def create
         user = User.find_by(email: params[:email])
         member = Member.find_by(email: params[:email])
-      
+        
         if (user && user.authenticate(params[:password])) || (member && member.authenticate(params[:password]))
           token = AuthenticationTokenService.encode(user&.id || member&.id)
-          render json: { user: UserSerializer.new(user), token: token }
+          render json: { user: user ? UserSerializer.new(user) : nil, member: member ? MemberSerializer.new(member) : nil, token: token }
         else
           render json: { message: 'Invalid email or password' }, status: :unauthorized
         end
     end
+      
       
   
     def destroy

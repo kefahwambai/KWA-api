@@ -13,15 +13,10 @@ class MembersController < ApplicationController
     render json: @member
   end
 
-  # POST /members
   def create
-    @member = Member.new(member_params)
-
-    if @member.save
-      render json: @member, status: :created, location: @member
-    else
-      render json: @member.errors, status: :unprocessable_entity
-    end
+    member = Member.create!(member_params)
+    token = AuthenticationTokenService.encode(member.id)
+    render json: { token: token }, status: :created
   end
 
   # PATCH/PUT /members/1
@@ -33,9 +28,13 @@ class MembersController < ApplicationController
     end
   end
 
-  # DELETE /members/1
   def destroy
-    @member.destroy
+    member = Member.find(params[:id])
+    if member.destroy
+      render json: { message: 'Member deleted successfully' }
+    else
+      render json: { errors: 'Failed to delete member!' }, status: :unprocessable_entity
+    end
   end
 
   private
@@ -46,6 +45,6 @@ class MembersController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def member_params
-      params.require(:member).permit(:name, :email, :approved)
+      params.permit(:name, :email, :approved)
     end
 end
